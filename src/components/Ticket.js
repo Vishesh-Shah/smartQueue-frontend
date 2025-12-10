@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
@@ -9,7 +9,7 @@ const Ticket = () => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
-  const [hasNotified, setHasNotified] = useState(false);
+  const hasNotifiedRef = useRef(false);
 
   useEffect(() => {
     fetchTicket();
@@ -25,6 +25,8 @@ const Ticket = () => {
   const fetchTicket = async () => {
     try {
       const response = await api.get(`/api/tickets/${code}`);
+      console.log('Ticket data:', response.data);
+      console.log('Ticket status:', response.data.status);
       setTicket(response.data);
     } catch (error) {
       console.error('Failed to fetch ticket', error);
@@ -35,10 +37,14 @@ const Ticket = () => {
   const checkNotification = async () => {
     try {
       const response = await api.get(`/api/tickets/${code}/notification`);
+      console.log('Notification response:', response.data);
+      console.log('isYourTurn:', response.data.isYourTurn);
+      console.log('Status:', response.data.status);
       setNotification(response.data);
       
-      if (response.data.isYourTurn && !hasNotified) {
-        setHasNotified(true);
+      if (response.data.isYourTurn && !hasNotifiedRef.current) {
+        hasNotifiedRef.current = true;
+        console.log('Showing notification alert!');
         // Show browser notification
         if (Notification.permission === 'granted') {
           new Notification('SmartQueue - Your Turn!', {
@@ -48,6 +54,11 @@ const Ticket = () => {
         }
         // Show alert
         alert("🔔 It's your turn! Please proceed to the counter.");
+      }
+      
+      // Reset notification flag when status changes back to waiting
+      if (!response.data.isYourTurn) {
+        hasNotifiedRef.current = false;
       }
     } catch (error) {
       console.error('Failed to check notification', error);
@@ -64,8 +75,11 @@ const Ticket = () => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'waiting': return 'text-yellow-400 bg-yellow-500/10';
+      case 'in_progress': return 'text-green-400 bg-green-500/10';
       case 'called': return 'text-green-400 bg-green-500/10';
+      case 'done': return 'text-blue-400 bg-blue-500/10';
       case 'served': return 'text-blue-400 bg-blue-500/10';
+      case 'skipped': return 'text-red-400 bg-red-500/10';
       case 'cancelled': return 'text-red-400 bg-red-500/10';
       default: return 'text-gray-400 bg-gray-500/10';
     }
@@ -74,8 +88,11 @@ const Ticket = () => {
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
       case 'waiting': return '⏳';
+      case 'in_progress': return '🔔';
       case 'called': return '🔔';
+      case 'done': return '✅';
       case 'served': return '✅';
+      case 'skipped': return '⏭️';
       case 'cancelled': return '❌';
       default: return '🎫';
     }
@@ -279,45 +296,26 @@ const Ticket = () => {
                 </motion.div>
               </div>
 
-              {/* Notification Banner */}
-              {notification?.isYourTurn && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-6 p-4 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl text-white text-center animate-pulse"
-                >
-                  <div className="text-2xl mb-2">🔔</div>
-                  <p className="font-bold text-lg">IT'S YOUR TURN!</p>
-                  <p className="text-sm">Please proceed to the counter immediately</p>
-                </motion.div>
-              )}
-
-              {/* Status Messages */}
+              {/* Status Message */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="mt-8 p-4 glass-dark rounded-xl"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`mt-6 p-4 rounded-xl text-white text-center ${
+                  (notification?.isYourTurn || ticket.status === 'IN_PROGRESS')
+                    ? 'bg-gradient-to-r from-green-500 to-teal-500 animate-pulse' 
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                }`}
               >
-                {ticket.status?.toLowerCase() === 'waiting' && (
-                  <div className="text-center text-yellow-300">
-                    <p className="font-semibold mb-1">Please wait for your turn</p>
-                    <p className="text-sm">You'll be notified when it's your time</p>
-                  </div>
-                )}
-                {(ticket.status?.toLowerCase() === 'in_progress' || notification?.isYourTurn) && (
-                  <div className="text-center text-green-300 animate-pulse">
-                    <p className="font-semibold mb-1">🔔 You're being called!</p>
-                    <p className="text-sm">Please proceed to the service counter</p>
-                  </div>
-                )}
-                {ticket.status?.toLowerCase() === 'done' && (
-                  <div className="text-center text-blue-300">
-                    <p className="font-semibold mb-1">✅ Service completed</p>
-                    <p className="text-sm">Thank you for using SmartQueue!</p>
-                  </div>
+                <div className="text-2xl mb-2">{(notification?.isYourTurn || ticket.status === 'IN_PROGRESS') ? '🔔' : '⏳'}</div>
+                <p className="font-bold text-lg">
+                  {(notification?.isYourTurn || ticket.status === 'IN_PROGRESS') ? 'Your number has come' : 'Check the display for your turn'}
+                </p>
+                {(notification?.isYourTurn || ticket.status === 'IN_PROGRESS') && (
+                  <p className="text-sm">Please proceed to the counter immediately</p>
                 )}
               </motion.div>
+
+
             </div>
           </motion.div>
 

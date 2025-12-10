@@ -15,8 +15,8 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
       navigate('/admin');
       return;
     }
@@ -60,6 +60,7 @@ const AdminDashboard = () => {
     try {
       await api.post(`/api/admin/call-next/${eventId}`);
       fetchTickets();
+      fetchEvents();
       alert('Next customer called!');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to call next');
@@ -70,6 +71,7 @@ const AdminDashboard = () => {
     try {
       await api.post(`/api/admin/mark-done/${ticketId}`);
       fetchTickets();
+      fetchEvents();
       alert('Ticket marked as done!');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to mark done');
@@ -80,6 +82,7 @@ const AdminDashboard = () => {
     try {
       await api.post(`/api/admin/skip/${ticketId}`);
       fetchTickets();
+      fetchEvents();
       alert('Ticket skipped!');
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to skip ticket');
@@ -87,7 +90,7 @@ const AdminDashboard = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('adminToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
     navigate('/admin');

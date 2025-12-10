@@ -15,7 +15,7 @@ const AdminLogin = () => {
     setError('');
     try {
       const response = await api.post('/api/admin/login', form);
-      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('adminToken', response.data.token);
       localStorage.setItem('userId', response.data.id);
       localStorage.setItem('userRole', 'ADMIN');
       navigate('/admin/dashboard');
