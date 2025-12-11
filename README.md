@@ -2,14 +2,12 @@
 
 A modern, responsive React application for digital queue management that eliminates physical waiting lines with an intuitive ticket booking system.
 
-## 📹 Demo Video
+## 🎥 Project Demo Video
+[▶️ Watch Demo Video](https://drive.google.com/file/d/12o9gY6HG8ty95Z8edJWnZJrCbF-uyLwt/view?usp=sharing)
 
-*Demo video will be added here*
-
-## 🌐 Live Demo
-
-🌐 **Frontend**: [Add your deployed frontend URL here]  
-🔗 **Backend API**: [Add your deployed backend URL here]
+## 🔗 Backend Repository
+You can find the backend code here:  
+👉 https://github.com/Vishesh-Shah/smartQueue-backend
 
 ## 🚀 Features
 
